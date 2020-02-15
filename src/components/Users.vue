@@ -37,7 +37,7 @@
           <!-- 插槽拿到当前行内对象(scope)数据，即scope.row -->
           <template slot-scope="scope">
             <!-- 让开关的状态关联到数据中mg_state-->
-            <!-- {{scope.row}} -->
+            <!--这一行的数据 {{scope.row}} -->
             <!-- 作用域插槽来决定操作列的渲染 -->
             <!-- value / v-model 绑定值boolean / string / number -->
             <!-- 绑定v-model到一个Boolean类型的变量。
@@ -57,7 +57,12 @@
               @click="showEditDialog(scope.row.id)"
             ></el-button>
             <!-- 删除 -->
-            <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+            <el-button
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              @click="removeUserById(scope.row.id)"
+            ></el-button>
             <!-- 分配角色按钮 -->
             <!-- Tooltip文字提示:展示鼠标 hover 时的提示信息。enterable鼠标是否可进入到tooltip中,默认true 可以进入-->
             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
@@ -377,10 +382,13 @@ export default {
         // 验证通过后发起数据请求
 
         // 提交服务器的数据
-        const { data: res } = await this.$http.put("users/" + this.editForm.id, {
-          email: this.editForm.email,
-          mobile: this.editForm.mobile
-        });
+        const { data: res } = await this.$http.put(
+          "users/" + this.editForm.id,
+          {
+            email: this.editForm.email,
+            mobile: this.editForm.mobile
+          }
+        );
         if (res.meta.status !== 200) {
           return this.$message.error("更新用户信息失败！");
         } else {
@@ -392,6 +400,37 @@ export default {
           this.$message.success("更新用户信息成功！");
         }
       });
+    },
+
+    // 根据id删除对应的用户信息
+    async removeUserById(id) {
+      // console.log(object);
+      // 先弹出询问用户是否删除数据
+      // 返回回的是promise对象，用await async优化
+      const comfirmResult = await this.$confirm(
+        "此操作将永久删除该用户, 是否继续?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).catch(err => {
+        return err;
+      });
+      // 如果用户确认删除，则返回值为字符串 confirm
+      // 如果用户取消了删除，则返回值为字符串 cancel
+      // console.log(confirmResult)
+      console.log(comfirmResult);
+      if (comfirmResult !== "confirm") {
+        return this.$message.info("已取消删除");
+      }
+      const { data: res } = await this.$http.delete("users/" + id);
+      if (res.meta.status !== 200) {
+        return this.$message.error("删除用户失败！");
+      }
+      this.$message.success("删除用户成功！");
+      this.getUserList();
     }
   }
 };
