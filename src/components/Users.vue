@@ -47,10 +47,15 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180px">
-          <template slot-scope>
+          <template slot-scope="scope">
             <!-- scope.row -->
             <!-- 修改 -->
-            <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+            <el-button
+              type="primary"
+              icon="el-icon-edit"
+              size="mini"
+              @click="showEditDialog(scope.row.id)"
+            ></el-button>
             <!-- 删除 -->
             <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
             <!-- 分配角色按钮 -->
@@ -81,7 +86,7 @@
     <el-dialog title="添加用户" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed()">
       <!-- dialog内容主体区 -->
       <!-- form -->
-      <!-- :model="数据绑定对象" :rules="数据验证规则对象" ref="引用对象"-->
+      <!-- :model="数据绑定对象" prop="验证规则字段" :rules="数据验证规则对象" ref="引用对象"-->
       <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="addForm.username"></el-input>
@@ -103,6 +108,27 @@
         <el-button type="primary" @click="addUser">确定</el-button>
       </span>
     </el-dialog>
+
+    <!-- 修改用户的对话框 -->
+    <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%" @close="editDialogClosed">
+      <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="70px">
+        <!-- 用户名不需要检验规则，故删除 prop=""-->
+        <el-form-item label="用户名">
+          <el-input v-model="editForm.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUserInfo">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -110,7 +136,7 @@
 export default {
   data: function() {
     // 自定义验证邮箱的规则
-    var checkMail = (rule, value, callback) => {
+    var checkEmail = (rule, value, callback) => {
       const regEmail = /^[A-Za-z\d]+([-_.][A-Za-z\d]+)*@([A-Za-z\d]+[-.])+[A-Za-z\d]{2,4}$/;
       // 验证邮箱的正则表达式
 
@@ -189,7 +215,7 @@ export default {
             trigger: "blur"
           },
           // 邮箱是否合法
-          { validator: checkMail, trigger: "blur" }
+          { validator: checkEmail, trigger: "blur" }
         ],
         mobile: [
           {
@@ -201,6 +227,23 @@ export default {
           // 手机号码是否合法
           { validator: checkMobile, trigger: "blur" }
         ]
+      },
+      // 控制修改用户对话框的显示与隐藏
+      editDialogVisible: false,
+
+      // 这是查询到的用户信息对象
+      editForm: {},
+
+      // 修改表单的验证规则对象
+      editFormRules: {
+        email: [
+          { required: true, message: "请输入用户邮箱", trigger: "blur" },
+          { validator: checkEmail, trigger: "blur" }
+        ],
+        mobile: [
+          { required: true, message: "请输入用户手机号码", trigger: "blur" },
+          { validator: checkMobile, trigger: "blur" }
+        ]
       }
     };
   },
@@ -209,6 +252,7 @@ export default {
   },
   methods: {
     // get请求回返回一个promise对象，可以使用async await优化，只返回data对象
+    // 获取用户数据列表
     async getUserList() {
       const { data: res } = await this.$http.get("users", {
         params: this.queryInfo
@@ -216,20 +260,20 @@ export default {
       if (res.meta.status !== 200) return this.$message("获取用户列表失败！");
       this.userlist = res.data.users;
       this.total = res.data.total;
-      console.log(res);
+      // console.log(res);
     },
     // handleSizeChange为pagesize发生改变时的相应监听函数，
     // handleCurrentChange为currentPage发生改变时的相应监听函数
     // 监听pagesize改变事件
     handleSizeChange(newSize) {
-      console.log(newSize);
+      //  console.log(newSize);
       this.queryInfo.pagesize = newSize;
       // pagesize发生变化之后立即重新发起ajax数据请求,来获取这一页的数据
       this.getUserList();
     },
     // 监听页码值改变的事件
     handleCurrentChange(newPage) {
-      console.log(newPage);
+      // console.log(newPage);
       this.queryInfo.pagenum = newPage;
       // pagenum发生变化之后重新发起ajax请求,来获取这一页的数据
       this.getUserList();
@@ -239,7 +283,7 @@ export default {
     //       2.调用接口把最新的状态提交到数据库中
     async userStateChange(userinfo) {
       // 拿到最新状态
-      console.log(userinfo);
+      // console.log(userinfo);
       // users/:uId/state/:type
       const { data: res } = await this.$http.put(
         `users/${userinfo.id}/state/${userinfo.mg_state}`
@@ -294,13 +338,59 @@ export default {
         //   return false;
         // }
         // 可以发送添加用户的网络请求
-        const { data: res } = await this.$http.post('users', this.addForm);
-        if (res.meta.status !== 201) return this.$message.error('添加用户失败');
-        this.$message.success('添加用户成功');
+        const { data: res } = await this.$http.post("users", this.addForm);
+        if (res.meta.status !== 201) return this.$message.error("添加用户失败");
+        this.$message.success("添加用户成功");
         // 隐藏添加用户的对话框
         this.addDialogVisible = false;
         // 重新发起请求用户列表
         this.getUserList();
+      });
+    },
+    // 展示编辑用户对话框
+    async showEditDialog(id) {
+      // console.log(id);
+      // 根据传进来id，调用api接口查询用户信息
+      const { data: res } = await this.$http.get("users/" + id);
+      // if (res.meta.status !== 200) return this.$message.error("查询用户信息失败");
+      this.editDialogVisible = !this.editDialogVisible;
+      if (res.meta.status !== 200) {
+        return this.$message.error("查询用户信息失败");
+      } else {
+        return (this.editForm = res.data);
+      }
+      // this.editDialogVisible = !this.editDialogVisible;
+      // 查询到的信息保存到editForm中
+      // this.editForm = res.data;
+      // this.editDialogVisible = !this.editDialogVisible;
+    },
+    // 实现修改表单的关闭之后的重置操作
+    editDialogClosed() {
+      this.$refs.editFormRef.resetFields();
+    },
+
+    // 提交修改之前的表单预验证操作
+    editUserInfo() {
+      // 对整个表单进行校验的方法，参数为一个回调函数
+      this.$refs.editFormRef.validate(async valid => {
+        if (!valid) return fasle;
+        // 验证通过后发起数据请求
+
+        // 提交服务器的数据
+        const { data: res } = await this.$http.put("users/" + this.editForm.id, {
+          email: this.editForm.email,
+          mobile: this.editForm.mobile
+        });
+        if (res.meta.status !== 200) {
+          return this.$message.error("更新用户信息失败！");
+        } else {
+          // 关闭对话框
+          this.editDialogVisible = false;
+          // 刷新数据列表
+          this.getUserList();
+          // 提示更新用户信息成功
+          this.$message.success("更新用户信息成功！");
+        }
       });
     }
   }
