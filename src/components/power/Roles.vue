@@ -21,7 +21,50 @@
       <!-- 添加边框线和隔行变色 -->
       <el-table :data="roleList" :border="true" :stripe="true">
         <!-- 展开列 -->
-        <el-table-column type="expand"></el-table-column>
+        <el-table-column type="expand">
+          <template slot-scope="scope">
+            <!--  先放一个layout布局组件-->
+            <el-row
+              :class="['btbottom',i1 ===0 ? 'bttop':'btbottom','vccenter']"
+              v-for="(item1,i1) in scope.row.children"
+              :key="item1.id"
+            >
+              <!-- 渲染一级权限 -->
+              <el-col :span="5">
+                <el-tag closable @close="removeRightById(scope.row,item1.id)">{{item1.authName}}</el-tag>
+                <i class="el-icon-caret-right"></i>
+              </el-col>
+              <!-- 渲染二级和三级权限 -->
+              <el-col :span="18">
+                <!-- 通过for循环渲染二级权限 -->
+                <el-row
+                  :class="['bttop',i2===0 ? '':'btbottom','vccenter']"
+                  v-for="(item2,i2) in item1.children"
+                  :key="item2.id"
+                >
+                  <el-col :span="6">
+                    <el-tag
+                      type="success"
+                      closable
+                      @close="removeRightById(scope.row,item2.id)"
+                    >{{item2.authName}}</el-tag>
+                    <i class="el-icon-caret-right"></i>
+                  </el-col>
+                  <!-- 三级权限 -->
+                  <el-col :span="18">
+                    <el-tag
+                      type="warning"
+                      v-for="item3 in item2.children"
+                      :key="item3.id"
+                      closable
+                      @close="removeRightById(scope.row,item3.id)"
+                    >{{item3.authName}}</el-tag>
+                  </el-col>
+                </el-row>
+              </el-col>
+            </el-row>
+          </template>
+        </el-table-column>
         <!-- 索引列 -->
         <el-table-column type="index" label="#"></el-table-column>
         <el-table-column prop="roleName" label="角色名称"></el-table-column>
@@ -33,14 +76,19 @@
               size="mini"
               icon="el-icon-edit"
               @click="showEditDialog(scope.row.id)"
-            ></el-button>
+            >编辑</el-button>
             <el-button
               type="danger"
               size="mini"
               icon="el-icon-delete"
               @click="removeRoleById(scope.row.id)"
-            ></el-button>
-            <el-button type="warning" size="mini" icon="el-icon-setting"></el-button>
+            >删除</el-button>
+            <el-button
+              type="warning"
+              size="mini"
+              icon="el-icon-setting"
+              @click="showSetRightDialog(scope.row.id)"
+            >分配权限</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -82,6 +130,17 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="editRoleInfo">确定</el-button>
+      </span>
+    </el-dialog>
+
+    <!--分配角色权限的对话框-->
+    <el-dialog title="分配权限" :visible.sync="setRightDialogVisible" width="50%">
+      <!--内容主体区域-->
+      111
+      <!--底部按钮区域-->
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRightDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="setRightDialogVisible = false">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -129,7 +188,8 @@ export default {
           }
         ]
       },
-      editForm: {}
+      editForm: {},
+      setRightDialogVisible: false
     };
   },
   created() {
@@ -138,7 +198,7 @@ export default {
   methods: {
     async getRolesList() {
       const { data: res } = await this.$http.get("roles");
-      // console.log(res);
+      console.log(res);
       if (res.meta.status !== 200) {
         return this.$message.error("获取角色数据失败");
       }
@@ -223,10 +283,60 @@ export default {
       }
       this.$message.success("删除用户成功！");
       this.getRolesList();
+    },
+    // 根据ID删除对应的权限
+    async removeRightById(role, rightId) {
+      // 弹窗提示用户确认是否删除
+      // MessageBox 弹框
+      //  console.log(role.id)
+      // console.log(rightId)
+      const confirmResult = await this.$confirm(
+        "此操作将永久删除该文件, 是否继续?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+          // 捕捉到用户的取消行为
+        }
+      ).catch(err => err);
+      // 如果用户确认删除，则返回值为字符串 confirm
+      // 如果用户取消删除，则返回值为字符串 cancel
+
+      if (confirmResult !== "confirm") {
+        return this.$message.info("取消了删除");
+      }
+      // console.log("确认了删除");
+      // 发起删除角色的请求
+      const { data: res } = await this.$http.delete(
+        `roles/${role.id}/rights/${rightId}`
+      );
+      if (res.meta.status !== 200) return this.$message.error("删除权限失败！");
+      // this.getRolesList()
+      role.children = res.data;
+      // 此时点击权限标签的删除，已经可以实现功能。但是有个问题，删除以后重新发起请求角色列表，
+      // 整个角色列表刷新，导致打开的权限被闭合了，查看接口文档，发现删除角色指定权限的接口，响应数据说明里指出，返回的data,
+      // 是当前角色下最新的权限数据，所以可以直接使用这个data渲染权限列表：
+    },
+    showSetRightDialog(id) {
+      this.setRightDialogVisible = true;
+      
     }
   }
 };
 </script>
 
 <style lang="less" scoped>
+.bttop {
+  border-top: 1px solid #eee;
+}
+.btbottom {
+  border-bottom: 1px solid #eee;
+}
+.vccenter {
+  // flex布局
+  display: flex;
+  // 纵向居中对齐
+  align-items: center;
+}
 </style>
