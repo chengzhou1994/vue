@@ -87,7 +87,8 @@
               type="warning"
               size="mini"
               icon="el-icon-setting"
-              @click="showSetRightDialog(scope.row.id)"
+              @click="showSetRightDialog(scope.row)"
+              @close="showSetRightDialogClosed"
             >分配权限</el-button>
           </template>
         </el-table-column>
@@ -135,8 +136,21 @@
 
     <!--分配角色权限的对话框-->
     <el-dialog title="分配权限" :visible.sync="setRightDialogVisible" width="50%">
-      <!--内容主体区域-->
-      111
+      <!--树形控件-->
+      <!-- :data="数据源" prop指定数据绑定的字段，属性绑定对象，label看到的哪个属性对应的值，
+      children: "children"是指父子节点通过哪个属性嵌套的-->
+      <!-- 每个树节点用来作为唯一标识的属性，整棵树应该是唯一的 -->
+      <!-- default-expand-all是否默认展开所有节点 -->
+      <!-- show-checkbox节点是否可被选择 -->
+      <!-- default-checked-keys 默认要勾选展示的节点，你得要提供一个array数组绑定过来就行了-->
+      <el-tree
+        :data="rightsList"
+        :props="treeProps"
+        show-checkbox
+        node-key="id"
+        :default-expand-all="true"
+        :default-checked-keys="defKeys"
+      ></el-tree>
       <!--底部按钮区域-->
       <span slot="footer" class="dialog-footer">
         <el-button @click="setRightDialogVisible = false">取 消</el-button>
@@ -189,7 +203,17 @@ export default {
         ]
       },
       editForm: {},
-      setRightDialogVisible: false
+      // 控制分配权限对话框的隐藏
+      setRightDialogVisible: false,
+      // 获取到的所有权限数据
+      rightsList: [],
+      // 树形控件的绑定对象
+      treeProps: {
+        label: "authName",
+        children: "children"
+      },
+      // 默认选中地节点ID值数组
+      defKeys: []
     };
   },
   created() {
@@ -198,11 +222,10 @@ export default {
   methods: {
     async getRolesList() {
       const { data: res } = await this.$http.get("roles");
-      console.log(res);
+      // console.log(res);
       if (res.meta.status !== 200) {
         return this.$message.error("获取角色数据失败");
       }
-      // this.$message.success("获取角色数据成功");
       this.roleList = res.data;
     },
     // 监听 添加用户角色对话框的关闭事件
@@ -284,6 +307,7 @@ export default {
       this.$message.success("删除用户成功！");
       this.getRolesList();
     },
+
     // 根据ID删除对应的权限
     async removeRightById(role, rightId) {
       // 弹窗提示用户确认是否删除
@@ -318,9 +342,37 @@ export default {
       // 整个角色列表刷新，导致打开的权限被闭合了，查看接口文档，发现删除角色指定权限的接口，响应数据说明里指出，返回的data,
       // 是当前角色下最新的权限数据，所以可以直接使用这个data渲染权限列表：
     },
-    showSetRightDialog(id) {
+
+    async showSetRightDialog(role) {
+      // 先获取所有权限
+      const { data: res } = await this.$http.get("rights/tree");
+      if (res.meta.status !== 200) {
+        return this.$message.error("获取权限数据失败");
+      }
       this.setRightDialogVisible = true;
-      
+      // 获取到的所有权限数据放到data中
+      this.rightsList = res.data;
+      // 递归获取三级节点的id
+      this.getLeafKeys(role, this.defKeys);
+      console.log(res);
+    },
+
+    // 把权限的id放入到defKeys数组中。
+    // 点击分配权限按钮的同时，通过递归地形式，把当前角色已有的三级权限的id都放入到defKeys数组中。
+    // 通过递归的形式，获取角色下所有三级权限的id，并保存到defKeys数组中
+    getLeafKeys(node, arr) {
+      // 节点数组
+      // 如果当前node节点不包含children属性，则是三级权限节点
+      if (!node.children) {
+        return arr.push(node.id);
+      }
+      // 循环node里的children数组，每循环一项拿到一个子节点item，在根据item再次调用递归函数getLeafKeys，
+      // 然后把当前的item当做一个节点传进去，同时把arr传进去。只要递归完毕后，就把三级节点的id都保存到arr了
+      node.children.forEach(item => this.getLeafKeys(item, arr));
+    },
+    // 监听 分配权限对话框的关闭事件
+    showSetRightDialogClosed() {
+      this.defKeys = [];
     }
   }
 };
