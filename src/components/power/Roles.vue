@@ -142,6 +142,7 @@
       <!-- 每个树节点用来作为唯一标识的属性，整棵树应该是唯一的 -->
       <!-- default-expand-all是否默认展开所有节点 -->
       <!-- show-checkbox节点是否可被选择 -->
+      <!-- 必须设置node-key -->
       <!-- default-checked-keys 默认要勾选展示的节点，你得要提供一个array数组绑定过来就行了-->
       <el-tree
         :data="rightsList"
@@ -150,11 +151,12 @@
         node-key="id"
         :default-expand-all="true"
         :default-checked-keys="defKeys"
+        ref="treeRef"
       ></el-tree>
       <!--底部按钮区域-->
       <span slot="footer" class="dialog-footer">
         <el-button @click="setRightDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="setRightDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="allotRights()">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -213,7 +215,9 @@ export default {
         children: "children"
       },
       // 默认选中地节点ID值数组
-      defKeys: []
+      defKeys: [],
+      // 当前即将分配权限的角色id
+      roleId: ""
     };
   },
   created() {
@@ -342,8 +346,9 @@ export default {
       // 整个角色列表刷新，导致打开的权限被闭合了，查看接口文档，发现删除角色指定权限的接口，响应数据说明里指出，返回的data,
       // 是当前角色下最新的权限数据，所以可以直接使用这个data渲染权限列表：
     },
-
+    // 思路：1.先获取当前角色下面的所拥有的权限,通过scope.row获得这个
     async showSetRightDialog(role) {
+      this.roleId = role.id;
       // 先获取所有权限
       const { data: res } = await this.$http.get("rights/tree");
       if (res.meta.status !== 200) {
@@ -354,7 +359,8 @@ export default {
       this.rightsList = res.data;
       // 递归获取三级节点的id
       this.getLeafKeys(role, this.defKeys);
-      console.log(res);
+      // console.log(res);
+      console.log(this.defKeys);
     },
 
     // 把权限的id放入到defKeys数组中。
@@ -370,9 +376,37 @@ export default {
       // 然后把当前的item当做一个节点传进去，同时把arr传进去。只要递归完毕后，就把三级节点的id都保存到arr了
       node.children.forEach(item => this.getLeafKeys(item, arr));
     },
-    // 监听 分配权限对话框的关闭事件
+    // 监听分配权限对话框的关闭事件
     showSetRightDialogClosed() {
       this.defKeys = [];
+    },
+    // 分配完权限之后提交操作
+    // 思路：1.先获取全选和半选节点的ID，getCheckedKeys(),getHalfCheckedKeys()
+    // 都返回被选中的节点的 key 所组成的数组,被半选中的节点的key所组成的数组
+    // setRightDialogVisible = false"
+    async allotRights() {
+      const keys = [
+        ...this.$refs.treeRef.getCheckedKeys(),
+        ...this.$refs.treeRef.getHalfCheckedKeys()
+      ];
+      console.log(keys);
+      // join() 方法用于把数组中的所有元素放入一个字符串。
+      // 可选，指定要使用的分隔符。如果省略该参数，则使用逗号作为分隔符。
+      const idStr = keys.join(",");
+      const { data: res } = await this.$http.post(
+        `roles/${this.roleId}/rights`,
+        {
+          rids: idStr
+        }
+      );
+      if (res.meta.status !== 200) {
+        return this.$message.error("分别权限失败！");
+      }
+      this.$message.success("分配权限成功！");
+      // 刷新数据列表
+      this.getRolesList();
+      // 关闭分配权限对话框
+      this.setRightDialogVisible = false;
     }
   }
 };
