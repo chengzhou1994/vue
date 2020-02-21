@@ -9,12 +9,27 @@ import "./assets/fonts/iconfont.css";
 
 import axios from "axios";
 
-// 设置axios请求的根路径
+import TreeTable from "vue-table-with-tree-grid";
 
+// 设置axios请求的根路径
 axios.defaults.baseURL = "http://127.0.0.1:8888/api/private/v1/";
 
-// http request 拦截器
+// 设置axios为form-data
+// axios.defaults.headers.post["Content-Type"] =
+//   "application/x-www-form-urlencoded";
+// axios.defaults.headers.get["Content-Type"] =
+//   "application/x-www-form-urlencoded";
+// axios.defaults.transformRequest = [
+//   function(data) {
+//     let ret = "";
+//     for (const it in data) {
+//       ret += encodeURIComponent(it) + "=" + encodeURIComponent(data[it]) + "&";
+//     }
+//     return ret;
+//   }
+// ];
 
+// http request 拦截器
 // axios请求拦截添加token保证拥有获取数据的权限，config是请求对象
 // 保证有权限的api可以调用
 axios.interceptors.request.use(config => {
@@ -29,8 +44,10 @@ axios.interceptors.request.use(config => {
 Vue.prototype.$http = axios;
 Vue.config.productionTip = false;
 
+// 全局注册这个插件vue-table-with-tree-grid
+Vue.component("tree-table", TreeTable);
+
 new Vue({
   router,
   render: h => h(App)
 }).$mount("#app");
-

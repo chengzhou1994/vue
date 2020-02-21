@@ -29,7 +29,8 @@ import {
   Tag,
   Tree,
   Select,
-  Option
+  Option,
+  Cascader
 } from "element-ui";
 // 使用Vue.use全局注册组件
 Vue.use(Button);
@@ -58,6 +59,7 @@ Vue.use(Tag);
 Vue.use(Tree);
 Vue.use(Select);
 Vue.use(Option);
+Vue.use(Cascader);
 // Element 为 Vue.prototype 添加了全局方法 $message。
 // 弹框提示组件挂载到vue的原型上的属性起个名字message，每个组件可以用this调用$message,即this.$message
 Vue.prototype.$message = Message;

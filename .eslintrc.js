@@ -18,6 +18,8 @@ module.exports = {
     "no-console": 0, // 禁止使用console
     "no-unused-vars": "off",
     "vue/no-unused-vars": "off",
+    "vue/no-parsing-error": "off",
+    "vue/no-duplicate-attributes": "off",
     semi: [2, "always"], // 语句强制分号结尾
     "no-trailing-spaces": 0,
     "no-multi-spaces": 0, //不能用多余的空格
@@ -29,6 +31,5 @@ module.exports = {
     "no-lonely-if": 2, //禁止else语句内只有if语句
     quotes: [0, "single"], //引号类型 `` "" ''
     "quote-props": [0, "always"] //对象字面量中的属性名是否强制双引号
-  },
-
+  }
 };

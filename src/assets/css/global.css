@@ -25,4 +25,7 @@ html,body,#app{
     margin-top: 7px;
     margin-bottom: 7px;
 }
+.el-cascader-panel {
+    height: 200px;
+}
 
