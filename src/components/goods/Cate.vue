@@ -252,6 +252,7 @@ export default {
       // pagenum发生变化之后重新发起ajax请求,来获取这一页的数据
       this.getCatelist();
     },
+    // 点击按钮 弹出添加分类对话框
     showAddCateDialog() {
       // 先获取父级分类列表数据
       this.getParentCateList();
@@ -318,6 +319,8 @@ export default {
       });
     },
     // 根据id先加载出数据
+    // 打开对话框是请求根据 id 查询分类的接口，请求路径：categories/:id，请求方法：get
+    // 然后把查询到的数据赋值给编辑分类的表单数据
     async editCateDialog(id) {
       // 发起根据id查询分类的网络请求
       const { data: res } = await this.$http.get("categories/" + id);
@@ -356,7 +359,9 @@ export default {
         }
       });
     },
+    // 实现删除分类功能操作 给删除按钮添加点击事件：根据id
     async removeCateDialogById(id) {
+      // 弹框 询问用户是否删除
       const comfirmResult = await this.$confirm(
         "此操作将永久删除该分类, 是否继续?",
         "提示",
