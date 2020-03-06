@@ -30,6 +30,9 @@ module.exports = {
     "no-undef": 0, //不能有未定义的变量
     "no-lonely-if": 2, //禁止else语句内只有if语句
     quotes: [0, "single"], //引号类型 `` "" ''
-    "quote-props": [0, "always"] //对象字面量中的属性名是否强制双引号
+    "quote-props": [0, "always"], //对象字面量中的属性名是否强制双引号
+    "no-useless-return": "off",
+    "vue/return-in-computed-property": "warn"
+
   }
 };
