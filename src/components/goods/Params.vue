@@ -179,7 +179,7 @@ export default {
     return {
       // 商品分类列表.默认为空
       catList: [],
-      //
+      // 配置选项
       cateProps: {
         value: "cat_id", // 指定选中值的属性
         label: "cat_name", // 指定选中标签的名称
@@ -250,7 +250,7 @@ export default {
       // 证明如果选中的不是三级目录
       if (this.selectCatKeys.length !== 3) {
         // 将selectCatKeys数据清空重置
-        this.selectCatKeys = []; 
+        this.selectCatKeys = [];
         // 将manyTableData数据清空重置
         this.manyTableData = [];
         // 将onlyTableData数据清空重置
