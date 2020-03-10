@@ -87,6 +87,7 @@ export default {
         params: this.queryInfo
       });
       if (res.meta.status !== 200) {
+        return this.$message.error("获取数据失败！");
       }
       this.$message.success("获取商品列表数据成功！");
       this.goodsList = res.data.goods;
@@ -134,7 +135,7 @@ export default {
     },
     goAddpage() {
       // 编程式的导航跳转路由
-      this.$router.push('/goods/add');
+      this.$router.push("/goods/add");
     }
   }
 };

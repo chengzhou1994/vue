@@ -1,4 +1,7 @@
 import Vue from "vue";
+// 导入时间轴插件element-ui版本6.0以上才有,故导入
+import Timeline from "./timeline/index.js";
+import TimelineItem from "./timeline-item/index.js";
 // 按需导入elment-ui中的组件
 // 导入elment-ui中的弹框提示组件
 import {
@@ -76,6 +79,9 @@ Vue.use(Step);
 Vue.use(CheckboxGroup);
 Vue.use(Checkbox);
 Vue.use(Upload);
+Vue.use(Timeline);
+Vue.use(TimelineItem);
+
 // Element 为 Vue.prototype 添加了全局方法 $message。
 // 弹框提示组件挂载到vue的原型上的属性起个名字message，每个组件可以用this调用$message,即this.$message
 Vue.prototype.$message = Message;
