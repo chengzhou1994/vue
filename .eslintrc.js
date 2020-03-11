@@ -33,6 +33,5 @@ module.exports = {
     "quote-props": [0, "always"], //对象字面量中的属性名是否强制双引号
     "no-useless-return": "off",
     "vue/return-in-computed-property": "warn"
-
   }
 };
