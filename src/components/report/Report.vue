@@ -66,7 +66,6 @@ export default {
     if (res.meta.status !== 200) {
       return this.$message.error("获取折线图数据失败！");
     }
-
     // 第四步 服务器返回的数据与需要合并的选项进行合并
     const result = _.merge(res.data, this.options);
     // 第五步 使用刚指定的配置项和数据显示图表。
