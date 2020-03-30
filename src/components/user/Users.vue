@@ -61,7 +61,7 @@
               type="danger"
               icon="el-icon-delete"
               size="mini"
-              @click="removeUserById(scope.row)"
+              @click="removeUserById(scope.row.id)"
             ></el-button>
             <!-- 分配角色按钮 -->
             <!-- Tooltip文字提示:展示鼠标 hover 时的提示信息。enterable鼠标是否可进入到tooltip中,默认true 可以进入-->
@@ -446,6 +446,7 @@ export default {
 
     // 根据id删除对应的用户信息
     async removeUserById(id) {
+      // console.log(row);
       // console.log(object);
       // 先弹出询问用户是否删除数据
       // 返回回的是promise对象，用await async优化

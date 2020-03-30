@@ -72,7 +72,7 @@ const routes = [
     path: "/home",
     component: Home,
     // 只要访问/home，重定向到/welcome
-    redirect: "/welcome",
+    redirect: "/welcome",                            
     children: [
       {
         // 以“/”开头的嵌套路径会被当作根路径，所以子路由上不用加“/”;

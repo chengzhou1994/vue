@@ -19,7 +19,7 @@
         </el-col>
       </el-row>
       <!-- table表格区域 -->
-      <el-table :data="goodsList" border stripe>
+      <el-table :data="goodsList" border stripe> 
         <!-- 索引列  -->
         <!-- 如果需要显示索引，可以增加一列el-table-column，设置type属性为index即可显示从1开始的索引号。 -->
         <el-table-column type="index" label="#"></el-table-column>
